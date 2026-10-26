@@ -233,10 +233,10 @@ export const HomePage: React.FC<HomePageProps> = ({
     : null;
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* 1. HERO GREETING — SAPAAN PERSONAL, TANGGAL & KALIMAT PEMBUKA */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-cream-50 to-bloom-100/60 border border-bloom-200/80 p-6 sm:p-9 shadow-bloom">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+    <div className="space-y-6 sm:space-y-7 animate-fade-in pb-4">
+      {/* 1. HERO GREETING — SEAMLESS & ANGGUN (TANPA CARD KOTAK TEBAL) */}
+      <header className="pt-1 pb-1 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 border border-bloom-200/80 text-xs font-medium text-bloom-800 shadow-bloom-sm">
             <Calendar className="w-3.5 h-3.5 text-bloom-600" />
             <span>{fullDateStr}</span>
@@ -286,34 +286,26 @@ export const HomePage: React.FC<HomePageProps> = ({
           )}
         </div>
 
-        <h2 className="font-serif text-3xl sm:text-4xl font-semibold text-rosewood-900 tracking-tight leading-tight">
-          {greeting}, <span className="italic text-bloom-700">{ownerName}</span>.
-        </h2>
-        <p className="mt-3 text-sm sm:text-base text-rosewood-700 max-w-2xl leading-relaxed">
-          {calmingOpening}
-        </p>
-      </section>
+        <div>
+          <h2 className="font-serif text-3xl sm:text-4xl font-semibold text-rosewood-900 tracking-tight leading-tight">
+            {greeting}, <span className="italic text-bloom-700">{ownerName}</span>.
+          </h2>
+          <p className="mt-1.5 text-sm sm:text-base text-rosewood-600 max-w-2xl leading-relaxed">
+            {calmingOpening}
+          </p>
+        </div>
+      </header>
 
-      {/* 2. KARTU DAILY REMINDER (AFIRMASI, MINDSET, PRINSIP HIDUP - MAKSIMAL 7) */}
+      {/* 2. KARTU UTAMA DAILY REMINDER (AFIRMASI, MINDSET, PRINSIP HIDUP - MAKSIMAL 7) */}
       <section className="rounded-3xl bg-gradient-to-b from-white via-white to-bloom-50/40 border border-bloom-200/80 p-6 sm:p-8 shadow-bloom transition-all duration-300">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-bloom-100/90 border border-bloom-200 flex items-center justify-center text-bloom-700">
               <Sparkles className="w-4 h-4" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-rosewood-800">
-                  Daily Reminder
-                </h3>
-                <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-cream-100 text-rosewood-700 border border-bloom-200/80">
-                  {reminders.length}/7 Quotes
-                </span>
-              </div>
-              <p className="text-xs text-rosewood-500">
-                Pegangan pikiran & ketenangan batin hari ini (Maks. 7 quotes)
-              </p>
-            </div>
+            <h3 className="text-base font-semibold text-rosewood-900">
+              Daily Reminder
+            </h3>
           </div>
 
           <div className="flex items-center gap-2">
@@ -322,7 +314,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 {currentReminder.category}
               </span>
             )}
-            {!isMaxRemindersReached ? (
+            {!isMaxRemindersReached && (
               <button
                 type="button"
                 onClick={() => {
@@ -335,23 +327,9 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <Plus className="w-3.5 h-3.5 text-bloom-700" />
                 <span>Kalimat Baru</span>
               </button>
-            ) : (
-              <span
-                className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-medium bg-cream-100 text-rosewood-500 border border-bloom-200/70"
-                title="Maksimal 7 quotes sudah tercapai"
-              >
-                Maks. 7 Kuota Penuh
-              </span>
             )}
           </div>
         </div>
-
-        {/* Notifikasi jika kuota 7 sudah penuh dan user mencoba menambah */}
-        {isMaxRemindersReached && isAddingReminder && (
-          <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 animate-fade-in">
-            Maksimal 7 quotes sudah tercapai. Silakan edit atau hapus quote yang ada untuk mengganti dengan yang baru.
-          </div>
-        )}
 
         {/* Konten Quote atau Mode Edit */}
         {currentReminder ? (
@@ -361,12 +339,8 @@ export const HomePage: React.FC<HomePageProps> = ({
                 “{currentReminder.text}”
               </blockquote>
 
-              {/* Baris Tombol Edit & Hapus Quote */}
-              <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-bloom-200/50">
-                <span className="text-[11px] text-rosewood-500">
-                  Kategori: <strong className="text-rosewood-800 font-semibold">{currentReminder.category}</strong>
-                </span>
-
+              {/* Baris Tombol Edit & Hapus Quote (Bersih tanpa teks kategori) */}
+              <div className="pt-2 flex items-center justify-end border-t border-bloom-200/50">
                 {confirmDeleteRemId === currentReminder.id ? (
                   <div className="flex items-center gap-2 text-xs animate-fade-in">
                     <span className="text-rose-600 font-medium">Hapus quote ini?</span>
@@ -563,7 +537,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           >
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-semibold text-rosewood-900">
-                Tambah Kalimat Pengingat Baru ({reminders.length}/7)
+                Tambah Kalimat Pengingat Baru
               </h4>
               <button
                 type="button"
@@ -631,224 +605,211 @@ export const HomePage: React.FC<HomePageProps> = ({
         )}
       </section>
 
-      {/* 3. RINGKASAN MOOD & STATUS JURNAL HARI INI */}
-      <section className="rounded-3xl bg-white border border-bloom-200/80 p-6 sm:p-7 shadow-bloom">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-bloom-100/80 border border-bloom-200 flex items-center justify-center text-bloom-700">
-              <BookHeart className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="text-base font-semibold text-rosewood-900">
-                Mood & Jurnal Hari Ini
-              </h3>
-              <p className="text-xs text-rosewood-500">Check-in singkat harianmu</p>
-            </div>
-          </div>
+      {/* 3. ROW 2 KOLOM: MOOD & JURNAL (KIRI) DAN FUTURE NOTE (KANAN) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        {/* KOLOM KIRI: MOOD & JURNAL HARI INI */}
+        <section className="rounded-3xl bg-white border border-bloom-200/80 p-6 sm:p-7 shadow-bloom flex flex-col justify-between">
+          <div>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-bloom-100/80 border border-bloom-200 flex items-center justify-center text-bloom-700">
+                  <BookHeart className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-rosewood-900">
+                    Mood & Jurnal Hari Ini
+                  </h3>
+                  <p className="text-xs text-rosewood-500">Check-in singkat harianmu</p>
+                </div>
+              </div>
 
-          <span
-            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
-              hasJournalToday
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                : 'bg-amber-50 text-amber-800 border-amber-200'
-            }`}
-          >
-            {hasJournalToday ? (
-              <>
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Sudah Diisi ({todayEntries.length})</span>
-              </>
-            ) : (
-              <>
-                <Clock className="w-3.5 h-3.5 text-amber-600" />
-                <span>Belum Diisi</span>
-              </>
-            )}
-          </span>
-        </div>
-
-        {activeTodayEntry && displayMoodMeta ? (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-stretch">
-            <div className="md:col-span-5 flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-bloom-50/80 via-cream-50 to-white border border-bloom-200/70">
-              <div
-                className={`w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0 shadow-bloom-sm ${displayMoodMeta.badgeClass}`}
+              <span
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+                  hasJournalToday
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    : 'bg-amber-50 text-amber-800 border-amber-200'
+                }`}
               >
-                <MoodIcon mood={activeTodayEntry.mood} className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-sm font-semibold text-rosewood-900 block">
-                  Mood: {displayMoodMeta.label}
-                </span>
-                <p className="text-xs text-rosewood-500 mt-0.5">
-                  {displayMoodMeta.subtitle}
-                </p>
-              </div>
-            </div>
-
-            <div className="md:col-span-7 rounded-2xl bg-cream-50/90 border border-cream-300/80 p-4 flex flex-col justify-center">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-rosewood-500 mb-1">
-                Syukur Hari Ini
-              </p>
-              <p className="text-sm text-rosewood-800 line-clamp-2 leading-relaxed">
-                “{activeTodayEntry.gratitude}”
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-2xl bg-bloom-50/50 border border-dashed border-bloom-300 p-5 text-center">
-            <p className="text-sm font-semibold text-rosewood-900">
-              Hari ini belum ada catatan jurnal
-            </p>
-            <p className="text-xs text-rosewood-600 mt-1 leading-relaxed">
-              Lagi ngerasa Happy, Super Happy, Sad, atau Annoyed hari ini? Yuk catat singkat di
-              Daily Journal.
-            </p>
-          </div>
-        )}
-
-        <div className="mt-5 pt-4 border-t border-bloom-100 flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={() => onNavigate('diary')}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-rosewood-600 hover:text-bloom-700"
-          >
-            <Feather className="w-3.5 h-3.5" />
-            <span>Buka Free Diary</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => onNavigate('journal')}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-bloom-700 hover:text-bloom-800 group"
-          >
-            <span>{hasJournalToday ? 'Lihat / Tambah Jurnal' : 'Isi Jurnal Sekarang'}</span>
-            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-          </button>
-        </div>
-      </section>
-
-      {/* 4. FUTURE NOTE — CATATAN BAGI DIRI SENDIRI DI MASA DEPAN */}
-      <section className="rounded-3xl bg-gradient-to-br from-white via-cream-50/90 to-bloom-100/50 border border-bloom-200/80 p-6 sm:p-8 shadow-bloom">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-bloom-100 border border-bloom-200 flex items-center justify-center text-bloom-700 shadow-bloom-sm">
-              <MailOpen className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-serif text-2xl font-semibold text-rosewood-900">
-                  Future Note
-                </h3>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-white/90 text-bloom-800 border border-bloom-200">
-                  Surat Waktu Pribadi
-                </span>
-              </div>
-              <p className="text-xs text-rosewood-500">
-                Pesan hangat untuk dirimu sendiri di masa yang akan datang
-              </p>
-            </div>
-          </div>
-
-          {!isEditingFutureNote && (
-            <button
-              type="button"
-              onClick={handleOpenEditFutureNote}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium bg-white hover:bg-bloom-50 text-rosewood-800 border border-bloom-200/80 shadow-bloom-sm transition-colors"
-            >
-              <Edit3 className="w-3.5 h-3.5 text-bloom-700" />
-              <span>Ubah Surat Masa Depan</span>
-            </button>
-          )}
-        </div>
-
-        {!isEditingFutureNote ? (
-          <div className="rounded-2xl bg-white/90 border border-bloom-200/70 p-6 sm:p-7 shadow-bloom-sm">
-            <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-bloom-100">
-              <div className="flex items-center gap-2 text-xs font-semibold text-bloom-800">
-                <HeartHandshake className="w-4 h-4 text-bloom-600" />
-                <span>{futureNote.title}</span>
-              </div>
-              <span className="text-xs text-rosewood-500 bg-cream-100 px-3 py-1 rounded-full border border-cream-300">
-                {futureNote.targetDateLabel}
+                {hasJournalToday ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Sudah Diisi ({todayEntries.length})</span>
+                  </>
+                ) : (
+                  <>
+                    <Clock className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Belum Diisi</span>
+                  </>
+                )}
               </span>
             </div>
 
-            <p className="text-sm sm:text-base text-rosewood-800 leading-relaxed whitespace-pre-line font-normal">
-              {futureNote.content}
-            </p>
+            {activeTodayEntry && displayMoodMeta ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-gradient-to-r from-bloom-50/80 via-cream-50 to-white border border-bloom-200/70">
+                  <div
+                    className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 shadow-bloom-sm ${displayMoodMeta.badgeClass}`}
+                  >
+                    <MoodIcon mood={activeTodayEntry.mood} className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-sm font-semibold text-rosewood-900 block">
+                      Mood: {displayMoodMeta.label}
+                    </span>
+                    <p className="text-xs text-rosewood-500 mt-0.5 truncate">
+                      {displayMoodMeta.subtitle}
+                    </p>
+                  </div>
+                </div>
 
-            <div className="mt-5 pt-3 border-t border-bloom-100/80 flex items-center justify-between text-xs text-rosewood-400">
-              <span>Ditulis dengan tulus oleh dirimu hari ini</span>
-              <span>{futureNote.updatedAt}</span>
-            </div>
+                <div className="rounded-2xl bg-cream-50/90 border border-cream-300/80 p-3.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-rosewood-500 mb-1">
+                    Syukur Hari Ini
+                  </p>
+                  <p className="text-xs sm:text-sm text-rosewood-800 line-clamp-2 leading-relaxed">
+                    “{activeTodayEntry.gratitude}”
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl bg-bloom-50/50 border border-dashed border-bloom-300 p-5 text-center">
+                <p className="text-sm font-semibold text-rosewood-900">
+                  Hari ini belum ada catatan jurnal
+                </p>
+                <p className="text-xs text-rosewood-600 mt-1 leading-relaxed">
+                  Yuk luangkan satu menit untuk mencatat perasaan dan rasa syukurmu.
+                </p>
+              </div>
+            )}
           </div>
-        ) : (
-          <form
-            onSubmit={handleSubmitFutureNote}
-            className="rounded-2xl bg-white border border-bloom-200 p-5 sm:p-6 space-y-4 animate-fade-in"
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-rosewood-700 mb-1">
-                  Judul Catatan
-                </label>
-                <input
-                  type="text"
-                  value={fnTitle}
-                  onChange={(e) => setFnTitle(e.target.value)}
-                  placeholder="Untuk Diriku di Masa Depan"
-                  className="w-full rounded-xl border border-bloom-200 bg-cream-50/40 px-3.5 py-2 text-sm text-rosewood-900 focus:outline-none focus:ring-2 focus:ring-bloom-300"
-                />
+
+          <div className="mt-5 pt-4 border-t border-bloom-100 flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => onNavigate('diary')}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-rosewood-600 hover:text-bloom-700"
+            >
+              <Feather className="w-3.5 h-3.5" />
+              <span>Buka Free Diary</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate('journal')}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-bloom-700 hover:text-bloom-800 group"
+            >
+              <span>{hasJournalToday ? 'Lihat / Tambah' : 'Isi Jurnal'}</span>
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+            </button>
+          </div>
+        </section>
+
+        {/* KOLOM KANAN: FUTURE NOTE (SURAT UNTUK MASA DEPAN) */}
+        <section className="rounded-3xl bg-gradient-to-br from-white via-cream-50/90 to-bloom-100/50 border border-bloom-200/80 p-6 sm:p-7 shadow-bloom flex flex-col justify-between">
+          <div>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-bloom-100 border border-bloom-200 flex items-center justify-center text-bloom-700 shadow-bloom-sm">
+                  <MailOpen className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-rosewood-900">
+                    Future Note
+                  </h3>
+                  <p className="text-xs text-rosewood-500">
+                    Pesan hangat untuk dirimu nanti
+                  </p>
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-rosewood-700 mb-1">
-                  Momen Pembukaan / Label Waktu
-                </label>
-                <input
-                  type="text"
-                  value={fnTargetLabel}
-                  onChange={(e) => setFnTargetLabel(e.target.value)}
-                  placeholder="Contoh: Dibuka saat akhir tahun / saat butuh semangat"
-                  className="w-full rounded-xl border border-bloom-200 bg-cream-50/40 px-3.5 py-2 text-sm text-rosewood-900 focus:outline-none focus:ring-2 focus:ring-bloom-300"
-                />
+
+              {!isEditingFutureNote && (
+                <button
+                  type="button"
+                  onClick={handleOpenEditFutureNote}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-white hover:bg-bloom-50 text-rosewood-800 border border-bloom-200/80 shadow-bloom-sm transition-colors"
+                >
+                  <Edit3 className="w-3.5 h-3.5 text-bloom-700" />
+                  <span>Ubah</span>
+                </button>
+              )}
+            </div>
+
+            {!isEditingFutureNote ? (
+              <div className="rounded-2xl bg-white/90 border border-bloom-200/70 p-4 sm:p-5 shadow-bloom-sm space-y-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-bloom-100">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-bloom-800">
+                    <HeartHandshake className="w-3.5 h-3.5 text-bloom-600" />
+                    <span>{futureNote.title}</span>
+                  </div>
+                  <span className="text-[11px] text-rosewood-500 bg-cream-100 px-2.5 py-0.5 rounded-full border border-cream-300">
+                    {futureNote.targetDateLabel}
+                  </span>
+                </div>
+
+                <p className="text-xs sm:text-sm text-rosewood-800 leading-relaxed whitespace-pre-line font-normal line-clamp-4">
+                  {futureNote.content}
+                </p>
               </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-rosewood-700 mb-1">
-                Isi Pesan untuk Dirimu Nanti
-              </label>
-              <textarea
-                rows={4}
-                value={fnContent}
-                onChange={(e) => {
-                  setFnContent(e.target.value);
-                  if (fnError) setFnError('');
-                }}
-                placeholder="Tuliskan harapan, pengingat hangat, atau apresiasi untuk dirimu di masa depan..."
-                className="w-full rounded-xl border border-bloom-200 bg-cream-50/40 px-3.5 py-2.5 text-sm text-rosewood-900 focus:outline-none focus:ring-2 focus:ring-bloom-300 leading-relaxed"
-              />
-            </div>
-
-            {fnError && <p className="text-xs text-rose-600 font-medium">{fnError}</p>}
-
-            <div className="flex justify-end gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setIsEditingFutureNote(false)}
-                className="px-4 py-2 rounded-xl text-xs font-medium text-rosewood-600 hover:bg-cream-200 transition-colors"
+            ) : (
+              <form
+                onSubmit={handleSubmitFutureNote}
+                className="rounded-2xl bg-white border border-bloom-200 p-4 space-y-3 animate-fade-in"
               >
-                Batal
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-bloom-600 hover:bg-bloom-700 text-white shadow-sm transition-colors"
-              >
-                Simpan Future Note
-              </button>
-            </div>
-          </form>
-        )}
-      </section>
+                <div>
+                  <input
+                    type="text"
+                    value={fnTitle}
+                    onChange={(e) => setFnTitle(e.target.value)}
+                    placeholder="Judul Catatan"
+                    className="w-full rounded-xl border border-bloom-200 bg-cream-50/40 px-3 py-1.5 text-xs text-rosewood-900 focus:outline-none focus:ring-2 focus:ring-bloom-300"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    value={fnTargetLabel}
+                    onChange={(e) => setFnTargetLabel(e.target.value)}
+                    placeholder="Momen pembukaan (contoh: Akhir Tahun)"
+                    className="w-full rounded-xl border border-bloom-200 bg-cream-50/40 px-3 py-1.5 text-xs text-rosewood-900 focus:outline-none focus:ring-2 focus:ring-bloom-300"
+                  />
+                </div>
+                <div>
+                  <textarea
+                    rows={3}
+                    value={fnContent}
+                    onChange={(e) => {
+                      setFnContent(e.target.value);
+                      if (fnError) setFnError('');
+                    }}
+                    placeholder="Tuliskan harapan atau pengingat hangat untuk dirimu di masa depan..."
+                    className="w-full rounded-xl border border-bloom-200 bg-cream-50/40 px-3 py-2 text-xs text-rosewood-900 focus:outline-none focus:ring-2 focus:ring-bloom-300 leading-relaxed"
+                  />
+                </div>
+                {fnError && <p className="text-xs text-rose-600 font-medium">{fnError}</p>}
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingFutureNote(false)}
+                    className="px-3 py-1 rounded-xl text-xs font-medium text-rosewood-600 hover:bg-cream-200"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-3.5 py-1 rounded-xl text-xs font-semibold bg-bloom-600 hover:bg-bloom-700 text-white shadow-sm"
+                  >
+                    Simpan
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-bloom-100/80 flex items-center justify-between text-[11px] text-rosewood-400">
+            <span>Surat pribadi untuk masa depan</span>
+            <span>{futureNote.updatedAt}</span>
+          </div>
+        </section>
+      </div>
     </div>
   );
 };
