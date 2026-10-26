@@ -91,14 +91,14 @@ export const bloomRepository = {
 
       const reminders: DailyReminder[] =
         remindersRes.data && remindersRes.data.length > 0
-          ? remindersRes.data.map((r) => ({
+          ? remindersRes.data.slice(0, 7).map((r) => ({
               id: r.id,
               category: r.category,
               text: r.text,
-              subtext: r.subtext,
+              subtext: r.subtext || '',
               isCustom: r.is_custom,
             }))
-          : DEFAULT_REMINDERS;
+          : DEFAULT_REMINDERS.slice(0, 7);
 
       const ownerName: string = futureNoteRes.data?.owner_name || 'Almira';
 
@@ -129,6 +129,7 @@ export const bloomRepository = {
         entry_date: d.entry_date,
         title: d.title,
         content: d.content,
+        is_pinned: Boolean(d.is_pinned),
         created_at: d.created_at,
         updated_at: d.updated_at,
       }));
@@ -265,6 +266,7 @@ export const bloomRepository = {
     payload: Omit<DiaryEntry, 'id' | 'created_at' | 'updated_at'>
   ): Promise<DiaryEntry> {
     const timeStr = this.formatCurrentTime();
+    const isPinned = Boolean(payload.is_pinned);
 
     if (supabase) {
       const { data, error } = await supabase
@@ -273,6 +275,7 @@ export const bloomRepository = {
           entry_date: payload.entry_date,
           title: payload.title,
           content: payload.content,
+          is_pinned: isPinned,
           created_at: timeStr,
           updated_at: timeStr,
         })
@@ -285,6 +288,7 @@ export const bloomRepository = {
           entry_date: data.entry_date,
           title: data.title,
           content: data.content,
+          is_pinned: Boolean(data.is_pinned),
           created_at: data.created_at,
           updated_at: data.updated_at,
         };
@@ -294,6 +298,7 @@ export const bloomRepository = {
 
     return {
       ...payload,
+      is_pinned: isPinned,
       id: this.createId('diary'),
       created_at: timeStr,
       updated_at: timeStr,
@@ -302,19 +307,27 @@ export const bloomRepository = {
 
   async updateDiaryEntry(
     existing: DiaryEntry,
-    updates: Omit<DiaryEntry, 'id' | 'created_at' | 'updated_at'>
+    updates: Partial<Omit<DiaryEntry, 'id' | 'created_at' | 'updated_at'>>
   ): Promise<DiaryEntry> {
     const updatedTime = this.formatCurrentTime();
+    const merged: DiaryEntry = {
+      ...existing,
+      ...updates,
+      updated_at: updatedTime,
+    };
 
     if (supabase) {
+      const updatePayload: Record<string, unknown> = {
+        updated_at: updatedTime,
+      };
+      if (updates.entry_date !== undefined) updatePayload.entry_date = updates.entry_date;
+      if (updates.title !== undefined) updatePayload.title = updates.title;
+      if (updates.content !== undefined) updatePayload.content = updates.content;
+      if (updates.is_pinned !== undefined) updatePayload.is_pinned = updates.is_pinned;
+
       const { data, error } = await supabase
         .from('diary_entries')
-        .update({
-          entry_date: updates.entry_date,
-          title: updates.title,
-          content: updates.content,
-          updated_at: updatedTime,
-        })
+        .update(updatePayload)
         .eq('id', existing.id)
         .select('*')
         .single();
@@ -325,6 +338,7 @@ export const bloomRepository = {
           entry_date: data.entry_date,
           title: data.title,
           content: data.content,
+          is_pinned: Boolean(data.is_pinned),
           created_at: data.created_at,
           updated_at: data.updated_at,
         };
@@ -332,11 +346,11 @@ export const bloomRepository = {
       console.error('Supabase updateDiaryEntry error:', error);
     }
 
-    return {
-      ...existing,
-      ...updates,
-      updated_at: updatedTime,
-    };
+    return merged;
+  },
+
+  async togglePinDiaryEntry(existing: DiaryEntry): Promise<DiaryEntry> {
+    return this.updateDiaryEntry(existing, { is_pinned: !existing.is_pinned });
   },
 
   async deleteDiaryEntry(id: string): Promise<void> {
@@ -448,10 +462,10 @@ export const bloomRepository = {
   async createCustomReminder(payload: {
     category: DailyReminder['category'];
     text: string;
-    subtext: string;
+    subtext?: string;
   }): Promise<DailyReminder> {
     const cleanText = payload.text.trim();
-    const cleanSubtext = payload.subtext.trim() || 'Catatan pengingat pribadi';
+    const cleanSubtext = payload.subtext?.trim() || '';
 
     if (supabase) {
       const { data, error } = await supabase
@@ -484,6 +498,62 @@ export const bloomRepository = {
       subtext: cleanSubtext,
       isCustom: true,
     };
+  },
+
+  async updateDailyReminder(
+    existing: DailyReminder,
+    updates: {
+      category: DailyReminder['category'];
+      text: string;
+      subtext?: string;
+    }
+  ): Promise<DailyReminder> {
+    const cleanText = updates.text.trim();
+    const cleanCategory = updates.category;
+    const cleanSubtext = updates.subtext !== undefined ? updates.subtext.trim() : (existing.subtext || '');
+
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('daily_reminders')
+        .update({
+          category: cleanCategory,
+          text: cleanText,
+          subtext: cleanSubtext,
+        })
+        .eq('id', existing.id)
+        .select('*')
+        .single();
+
+      if (!error && data) {
+        return {
+          id: data.id,
+          category: data.category,
+          text: data.text,
+          subtext: data.subtext,
+          isCustom: data.is_custom,
+        };
+      }
+      console.error('Supabase updateDailyReminder error:', error);
+    }
+
+    return {
+      ...existing,
+      category: cleanCategory,
+      text: cleanText,
+      subtext: cleanSubtext,
+    };
+  },
+
+  async deleteDailyReminder(id: string): Promise<void> {
+    if (supabase) {
+      const { error } = await supabase
+        .from('daily_reminders')
+        .delete()
+        .eq('id', id);
+      if (error) {
+        console.error('Supabase deleteDailyReminder error:', error);
+      }
+    }
   },
 
   // --- FUTURE NOTE & OWNER NAME ---

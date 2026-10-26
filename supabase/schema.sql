@@ -47,13 +47,18 @@ create table if not exists public.diary_entries (
   entry_date date not null,
   title text not null default 'Catatan Diary',
   content text not null,
+  is_pinned boolean not null default false,
   created_at text not null,
   updated_at text not null,
   created_timestamp timestamptz not null default now()
 );
 
+-- Migrasi jika tabel diary_entries sudah ada sebelumnya
+alter table public.diary_entries
+  add column if not exists is_pinned boolean not null default false;
+
 create index if not exists idx_diary_entries_date
-  on public.diary_entries (entry_date desc, created_timestamp desc);
+  on public.diary_entries (is_pinned desc, entry_date desc, created_timestamp desc);
 
 -- 5. TABEL MONTHLY GOALS (Target Bulanan & Riwayat Lintas Bulan)
 create table if not exists public.monthly_goals (

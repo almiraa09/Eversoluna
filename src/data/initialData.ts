@@ -158,6 +158,7 @@ export function buildInitialDiaries(now: Date): DiaryEntry[] {
       title: 'Memulai hari dengan lebih pelan',
       content:
         'Hari ini rasanya jauh lebih ringan. Aku sadar kalau pagi hari nggak langsung buru-buru cek notifikasi HP, kepala jadi punya ruang buat bernapas. Nggak semua hal harus direspons saat itu juga. Semoga sisa hari ini tetap tenang dan nyaman.',
+      is_pinned: false,
       created_at: '08:00',
       updated_at: '08:00',
     },
@@ -167,6 +168,7 @@ export function buildInitialDiaries(now: Date): DiaryEntry[] {
       title: 'Catatan kecil soal batasan diri',
       content:
         'Minggu ini sempat ngerasa agak keteteran karena terlalu banyak hal yang pengen diberesin barengan. Tapi setelah ditulis satu-satu di sini, ternyata nggak serumit yang ada di pikiran. Pelan-pelan belajar buat bilang cukup dan istirahat pas badan udah kasih sinyal capek.',
+      is_pinned: false,
       created_at: '21:30',
       updated_at: '21:30',
     },

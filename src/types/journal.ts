@@ -50,6 +50,7 @@ export interface DiaryEntry {
   entry_date: string; // YYYY-MM-DD
   title: string;
   content: string;
+  is_pinned?: boolean;
   created_at: string; // HH:mm
   updated_at: string;
 }

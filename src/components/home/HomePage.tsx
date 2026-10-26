@@ -8,6 +8,7 @@ import {
   BookHeart,
   MailOpen,
   Edit3,
+  Trash2,
   Check,
   X,
   Calendar,
@@ -40,8 +41,17 @@ interface HomePageProps {
   onAddCustomReminder: (payload: {
     category: DailyReminder['category'];
     text: string;
-    subtext: string;
+    subtext?: string;
   }) => void;
+  onUpdateReminder: (
+    id: string,
+    payload: {
+      category: DailyReminder['category'];
+      text: string;
+      subtext?: string;
+    }
+  ) => void;
+  onDeleteReminder: (id: string) => void;
   todayEntries: JournalEntry[];
   latestEntry: JournalEntry | undefined;
   futureNote: FutureNote;
@@ -57,6 +67,8 @@ export const HomePage: React.FC<HomePageProps> = ({
   activeReminderIndex,
   onChangeReminderIndex,
   onAddCustomReminder,
+  onUpdateReminder,
+  onDeleteReminder,
   todayEntries,
   latestEntry,
   futureNote,
@@ -66,6 +78,10 @@ export const HomePage: React.FC<HomePageProps> = ({
   const { greeting, timeLabel, calmingOpening } = getGreetingByHour(now);
   const fullDateStr = formatIndonesianFullDate(now);
 
+  // Maksimal 7 kuotes
+  const MAX_REMINDERS = 7;
+  const isMaxRemindersReached = reminders.length >= MAX_REMINDERS;
+
   // State untuk edit nama sapaan personal
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(ownerName);
@@ -74,8 +90,16 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [isAddingReminder, setIsAddingReminder] = useState(false);
   const [remCategory, setRemCategory] = useState<DailyReminder['category']>('Afirmasi');
   const [remText, setRemText] = useState('');
-  const [remSubtext, setRemSubtext] = useState('');
   const [remError, setRemError] = useState('');
+
+  // State untuk edit Daily Reminder
+  const [isEditingReminder, setIsEditingReminder] = useState(false);
+  const [editRemCategory, setEditRemCategory] = useState<DailyReminder['category']>('Afirmasi');
+  const [editRemText, setEditRemText] = useState('');
+  const [editRemError, setEditRemError] = useState('');
+
+  // State konfirmasi hapus reminder
+  const [confirmDeleteRemId, setConfirmDeleteRemId] = useState<string | null>(null);
 
   // State untuk edit Future Note
   const [isEditingFutureNote, setIsEditingFutureNote] = useState(false);
@@ -84,16 +108,23 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [fnContent, setFnContent] = useState(futureNote.content);
   const [fnError, setFnError] = useState('');
 
-  const currentReminder = reminders[activeReminderIndex] || reminders[0];
+  const currentReminder: DailyReminder | undefined =
+    reminders.length > 0 ? (reminders[activeReminderIndex] || reminders[0]) : undefined;
 
   const handlePrevReminder = () => {
+    if (reminders.length <= 1) return;
     const nextIdx = (activeReminderIndex - 1 + reminders.length) % reminders.length;
     onChangeReminderIndex(nextIdx);
+    setIsEditingReminder(false);
+    setConfirmDeleteRemId(null);
   };
 
   const handleNextReminder = () => {
+    if (reminders.length <= 1) return;
     const nextIdx = (activeReminderIndex + 1) % reminders.length;
     onChangeReminderIndex(nextIdx);
+    setIsEditingReminder(false);
+    setConfirmDeleteRemId(null);
   };
 
   const handleShuffleReminder = () => {
@@ -103,23 +134,61 @@ export const HomePage: React.FC<HomePageProps> = ({
       nextIdx = Math.floor(Math.random() * reminders.length);
     }
     onChangeReminderIndex(nextIdx);
+    setIsEditingReminder(false);
+    setConfirmDeleteRemId(null);
   };
 
   const handleSaveReminder = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isMaxRemindersReached) {
+      setRemError('Maksimal kuota 7 quotes sudah tercapai. Hapus salah satu quote untuk menambah baru.');
+      return;
+    }
     if (!remText.trim()) {
       setRemError('Tuliskan kalimat pengingat atau afirmasi terlebih dahulu.');
       return;
     }
     onAddCustomReminder({
       category: remCategory,
-      text: remText,
-      subtext: remSubtext,
+      text: remText.trim(),
     });
     setRemText('');
-    setRemSubtext('');
     setRemError('');
     setIsAddingReminder(false);
+  };
+
+  const handleOpenEditReminder = () => {
+    if (!currentReminder) return;
+    setEditRemCategory(currentReminder.category);
+    setEditRemText(currentReminder.text);
+    setEditRemError('');
+    setIsEditingReminder(true);
+    setIsAddingReminder(false);
+    setConfirmDeleteRemId(null);
+  };
+
+  const handleSaveEditReminder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentReminder) return;
+    if (!editRemText.trim()) {
+      setEditRemError('Isi quote pengingat tidak boleh kosong.');
+      return;
+    }
+    onUpdateReminder(currentReminder.id, {
+      category: editRemCategory,
+      text: editRemText.trim(),
+    });
+    setIsEditingReminder(false);
+    setEditRemError('');
+  };
+
+  const handleConfirmDeleteReminder = (id: string) => {
+    onDeleteReminder(id);
+    setConfirmDeleteRemId(null);
+    setIsEditingReminder(false);
+    if (activeReminderIndex >= reminders.length - 1) {
+      onChangeReminderIndex(Math.max(0, reminders.length - 2));
+    }
   };
 
   const handleSaveName = (e: React.FormEvent) => {
@@ -225,7 +294,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         </p>
       </section>
 
-      {/* 2. KARTU DAILY REMINDER (AFIRMASI, MINDSET, PRINSIP HIDUP) */}
+      {/* 2. KARTU DAILY REMINDER (AFIRMASI, MINDSET, PRINSIP HIDUP - MAKSIMAL 7) */}
       <section className="rounded-3xl bg-gradient-to-b from-white via-white to-bloom-50/40 border border-bloom-200/80 p-6 sm:p-8 shadow-bloom transition-all duration-300">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-2.5">
@@ -233,95 +302,268 @@ export const HomePage: React.FC<HomePageProps> = ({
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-rosewood-800">
-                Daily Reminder
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-rosewood-800">
+                  Daily Reminder
+                </h3>
+                <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-cream-100 text-rosewood-700 border border-bloom-200/80">
+                  {reminders.length}/7 Quotes
+                </span>
+              </div>
               <p className="text-xs text-rosewood-500">
-                Pegangan pikiran & ketenangan batin hari ini
+                Pegangan pikiran & ketenangan batin hari ini (Maks. 7 quotes)
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-bloom-100/90 text-bloom-800 border border-bloom-200">
-              {currentReminder.category}
-            </span>
-            <button
-              type="button"
-              onClick={() => setIsAddingReminder((prev) => !prev)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-cream-100 hover:bg-bloom-100/60 text-rosewood-800 border border-bloom-200/70 transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5 text-bloom-700" />
-              <span>Kalimat Baru</span>
-            </button>
+            {currentReminder && (
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-bloom-100/90 text-bloom-800 border border-bloom-200">
+                {currentReminder.category}
+              </span>
+            )}
+            {!isMaxRemindersReached ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddingReminder((prev) => !prev);
+                  setIsEditingReminder(false);
+                  setConfirmDeleteRemId(null);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-cream-100 hover:bg-bloom-100/60 text-rosewood-800 border border-bloom-200/70 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5 text-bloom-700" />
+                <span>Kalimat Baru</span>
+              </button>
+            ) : (
+              <span
+                className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-medium bg-cream-100 text-rosewood-500 border border-bloom-200/70"
+                title="Maksimal 7 quotes sudah tercapai"
+              >
+                Maks. 7 Kuota Penuh
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Isi Kutipan / Afirmasi Utama (Tanpa Subtext, Font Sans Bersih seperti Future Note) */}
-        <div className="rounded-2xl bg-gradient-to-br from-cream-50 via-white to-bloom-50/60 border border-bloom-200/60 p-6 sm:p-7 my-2">
-          <blockquote className="font-sans text-sm sm:text-base font-medium text-rosewood-800 leading-relaxed">
-            “{currentReminder.text}”
-          </blockquote>
-        </div>
+        {/* Notifikasi jika kuota 7 sudah penuh dan user mencoba menambah */}
+        {isMaxRemindersReached && isAddingReminder && (
+          <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 animate-fade-in">
+            Maksimal 7 quotes sudah tercapai. Silakan edit atau hapus quote yang ada untuk mengganti dengan yang baru.
+          </div>
+        )}
+
+        {/* Konten Quote atau Mode Edit */}
+        {currentReminder ? (
+          !isEditingReminder ? (
+            <div className="rounded-2xl bg-gradient-to-br from-cream-50 via-white to-bloom-50/60 border border-bloom-200/60 p-6 sm:p-7 my-2 space-y-4">
+              <blockquote className="font-sans text-sm sm:text-base font-medium text-rosewood-800 leading-relaxed">
+                “{currentReminder.text}”
+              </blockquote>
+
+              {/* Baris Tombol Edit & Hapus Quote */}
+              <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-bloom-200/50">
+                <span className="text-[11px] text-rosewood-500">
+                  Kategori: <strong className="text-rosewood-800 font-semibold">{currentReminder.category}</strong>
+                </span>
+
+                {confirmDeleteRemId === currentReminder.id ? (
+                  <div className="flex items-center gap-2 text-xs animate-fade-in">
+                    <span className="text-rose-600 font-medium">Hapus quote ini?</span>
+                    <button
+                      type="button"
+                      onClick={() => handleConfirmDeleteReminder(currentReminder.id)}
+                      className="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-medium hover:bg-rose-700 transition-colors"
+                    >
+                      Hapus
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteRemId(null)}
+                      className="px-2.5 py-1 rounded-lg bg-cream-200 text-rosewood-700 hover:bg-cream-300 transition-colors"
+                    >
+                      Batal
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={handleOpenEditReminder}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-rosewood-600 hover:text-bloom-700 hover:bg-bloom-100/60 transition-colors"
+                      title="Edit isi quote ini"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteRemId(currentReminder.id)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-rosewood-600 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                      title="Hapus quote ini"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Hapus</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* Mode Form Edit Quote Aktif */
+            <form
+              onSubmit={handleSaveEditReminder}
+              className="rounded-2xl bg-gradient-to-br from-cream-50 via-white to-bloom-50/60 border border-bloom-300 p-5 sm:p-6 my-2 space-y-4 animate-fade-in"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-bloom-800">
+                  Edit Quote Reminder
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingReminder(false)}
+                  className="p-1 rounded-lg text-rosewood-400 hover:text-rosewood-700"
+                  title="Batal edit"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {(['Afirmasi', 'Mindset', 'Prinsip Hidup'] as const).map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setEditRemCategory(cat)}
+                    className={`px-3 py-1 rounded-xl text-xs font-medium border transition-all ${
+                      editRemCategory === cat
+                        ? 'bg-bloom-500 text-white border-bloom-500 shadow-sm'
+                        : 'bg-white text-rosewood-700 border-bloom-200 hover:bg-bloom-50'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              <div>
+                <textarea
+                  rows={3}
+                  value={editRemText}
+                  onChange={(e) => {
+                    setEditRemText(e.target.value);
+                    if (editRemError) setEditRemError('');
+                  }}
+                  className="w-full rounded-xl border border-bloom-200 bg-white px-3.5 py-2.5 text-sm text-rosewood-900 focus:outline-none focus:ring-2 focus:ring-bloom-300"
+                  placeholder="Isi kalimat reminder..."
+                  autoFocus
+                />
+              </div>
+
+              {editRemError && (
+                <p className="text-xs text-rose-600 font-medium">{editRemError}</p>
+              )}
+
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingReminder(false)}
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-medium text-rosewood-600 hover:bg-cream-200"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 rounded-xl text-xs font-semibold bg-bloom-600 hover:bg-bloom-700 text-white shadow-sm"
+                >
+                  Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          )
+        ) : (
+          <div className="rounded-2xl bg-cream-50/60 border border-bloom-200/60 p-8 my-2 text-center space-y-3">
+            <p className="text-sm text-rosewood-500">
+              Belum ada quote pengingat harian.
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsAddingReminder(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-bloom-600 hover:bg-bloom-700 text-white"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Tambah Quote Pertama (Maks. 7)</span>
+            </button>
+          </div>
+        )}
 
         {/* Kontrol Ganti Kalimat Bawaan */}
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-1.5">
-            {reminders.map((rem, idx) => (
+        {reminders.length > 0 && (
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-1.5">
+              {reminders.map((rem, idx) => (
+                <button
+                  key={rem.id}
+                  type="button"
+                  onClick={() => {
+                    onChangeReminderIndex(idx);
+                    setIsEditingReminder(false);
+                    setConfirmDeleteRemId(null);
+                  }}
+                  aria-label={`Pilih pengingat ${idx + 1}`}
+                  className={`h-2 rounded-full transition-all duration-200 ${
+                    idx === activeReminderIndex
+                      ? 'w-7 bg-bloom-500'
+                      : 'w-2 bg-bloom-200 hover:bg-bloom-300'
+                  }`}
+                />
+              ))}
+              <span className="ml-2 text-xs text-rosewood-500">
+                {activeReminderIndex + 1} dari {reminders.length} kalimat
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
               <button
-                key={rem.id}
                 type="button"
-                onClick={() => onChangeReminderIndex(idx)}
-                aria-label={`Pilih pengingat ${idx + 1}`}
-                className={`h-2 rounded-full transition-all duration-200 ${
-                  idx === activeReminderIndex
-                    ? 'w-7 bg-bloom-500'
-                    : 'w-2 bg-bloom-200 hover:bg-bloom-300'
-                }`}
-              />
-            ))}
-            <span className="ml-2 text-xs text-rosewood-500">
-              {activeReminderIndex + 1} dari {reminders.length} kalimat
-            </span>
+                onClick={handlePrevReminder}
+                disabled={reminders.length <= 1}
+                className="p-2 rounded-xl border border-bloom-200/80 bg-white hover:bg-bloom-50 text-rosewood-700 transition-colors disabled:opacity-40"
+                title="Kalimat sebelumnya"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleShuffleReminder}
+                disabled={reminders.length <= 1}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-bloom-200/80 bg-white hover:bg-bloom-50 text-xs font-medium text-rosewood-800 transition-colors disabled:opacity-40"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-bloom-600" />
+                <span>Ganti Kalimat</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleNextReminder}
+                disabled={reminders.length <= 1}
+                className="p-2 rounded-xl border border-bloom-200/80 bg-white hover:bg-bloom-50 text-rosewood-700 transition-colors disabled:opacity-40"
+                title="Kalimat berikutnya"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
+        )}
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handlePrevReminder}
-              className="p-2 rounded-xl border border-bloom-200/80 bg-white hover:bg-bloom-50 text-rosewood-700 transition-colors"
-              title="Kalimat sebelumnya"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={handleShuffleReminder}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-bloom-200/80 bg-white hover:bg-bloom-50 text-xs font-medium text-rosewood-800 transition-colors"
-            >
-              <RefreshCw className="w-3.5 h-3.5 text-bloom-600" />
-              <span>Ganti Kalimat</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleNextReminder}
-              className="p-2 rounded-xl border border-bloom-200/80 bg-white hover:bg-bloom-50 text-rosewood-700 transition-colors"
-              title="Kalimat berikutnya"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* Form Tambah Kalimat Pengingat Sendiri */}
-        {isAddingReminder && (
+        {/* Form Tambah Kalimat Pengingat Sendiri (Hanya jika belum mencapai 7) */}
+        {isAddingReminder && !isMaxRemindersReached && (
           <form
             onSubmit={handleSaveReminder}
             className="mt-6 pt-6 border-t border-bloom-200/70 space-y-4 animate-fade-in"
           >
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-semibold text-rosewood-900">
-                Tambah Kalimat Pengingat Pribadi
+                Tambah Kalimat Pengingat Baru ({reminders.length}/7)
               </h4>
               <button
                 type="button"

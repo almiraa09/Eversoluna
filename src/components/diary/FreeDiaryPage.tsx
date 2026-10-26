@@ -5,6 +5,7 @@ import {
   Trash2,
   X,
   Calendar,
+  Pin,
 } from 'lucide-react';
 import { DiaryEntry } from '../../types/journal';
 import { formatYMDShort } from '../../utils/dateUtils';
@@ -17,6 +18,7 @@ interface FreeDiaryPageProps {
     id: string,
     payload: Omit<DiaryEntry, 'id' | 'created_at' | 'updated_at'>
   ) => void;
+  onTogglePinDiary: (id: string) => void;
   onDeleteDiary: (id: string) => void;
 }
 
@@ -25,6 +27,7 @@ export const FreeDiaryPage: React.FC<FreeDiaryPageProps> = ({
   entries,
   onCreateDiary,
   onUpdateDiary,
+  onTogglePinDiary,
   onDeleteDiary,
 }) => {
   const [isWriting, setIsWriting] = useState<boolean>(false);
@@ -35,13 +38,19 @@ export const FreeDiaryPage: React.FC<FreeDiaryPageProps> = ({
   const [formError, setFormError] = useState<string>('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  // Hardcoded: diary yang baru ditambahkan / tanggal terbaru selalu muncul paling atas
+  // Diary yang disematkan (is_pinned) selalu berada di paling atas,
+  // lalu diurutkan berdasarkan tanggal terbaru.
   const sortedEntries = useMemo(() => {
     return [...entries].sort((a, b) => {
+      const aPinned = Boolean(a.is_pinned);
+      const bPinned = Boolean(b.is_pinned);
+      if (aPinned !== bPinned) {
+        return aPinned ? -1 : 1;
+      }
       if (a.entry_date !== b.entry_date) {
         return b.entry_date.localeCompare(a.entry_date);
       }
-      return 0;
+      return (b.created_at || '').localeCompare(a.created_at || '');
     });
   }, [entries]);
 
@@ -192,16 +201,29 @@ export const FreeDiaryPage: React.FC<FreeDiaryPageProps> = ({
           </div>
         ) : (
           sortedEntries.map((entry) => (
-            <article key={entry.id} className="p-5 sm:p-6 space-y-2">
+            <article
+              key={entry.id}
+              className={`p-5 sm:p-6 space-y-2 transition-all duration-200 ${
+                entry.is_pinned
+                  ? 'bg-gradient-to-r from-bloom-50/50 via-white to-white border-l-4 border-l-bloom-500'
+                  : ''
+              }`}
+            >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {entry.is_pinned && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-bloom-100/90 text-bloom-800 border border-bloom-200">
+                        <Pin className="w-3 h-3 fill-bloom-600 text-bloom-600 rotate-45" />
+                        <span>Disematkan</span>
+                      </span>
+                    )}
                     <span className="text-xs font-semibold text-bloom-700">
                       {formatYMDShort(entry.entry_date)}
                     </span>
                     <span className="text-xs text-rosewood-400">• {entry.updated_at}</span>
                   </div>
-                  <h3 className="text-base font-semibold text-rosewood-900 mt-0.5">
+                  <h3 className="text-base font-semibold text-rosewood-900 mt-1">
                     {entry.title}
                   </h3>
                 </div>
@@ -214,20 +236,32 @@ export const FreeDiaryPage: React.FC<FreeDiaryPageProps> = ({
                         onDeleteDiary(entry.id);
                         setConfirmDeleteId(null);
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-medium"
+                      className="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-medium hover:bg-rose-700"
                     >
                       Hapus
                     </button>
                     <button
                       type="button"
                       onClick={() => setConfirmDeleteId(null)}
-                      className="px-2.5 py-1 rounded-lg bg-cream-200 text-rosewood-700"
+                      className="px-2.5 py-1 rounded-lg bg-cream-200 text-rosewood-700 hover:bg-cream-300"
                     >
                       Batal
                     </button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => onTogglePinDiary(entry.id)}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        entry.is_pinned
+                          ? 'text-bloom-700 bg-bloom-100 hover:bg-bloom-200'
+                          : 'text-rosewood-400 hover:text-bloom-700 hover:bg-bloom-50'
+                      }`}
+                      title={entry.is_pinned ? 'Lepas sematan' : 'Sematkan ke paling atas'}
+                    >
+                      <Pin className={`w-4 h-4 ${entry.is_pinned ? 'fill-current rotate-45' : ''}`} />
+                    </button>
                     <button
                       type="button"
                       onClick={() => openEditForm(entry)}

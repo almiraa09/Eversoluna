@@ -166,11 +166,30 @@ export function App() {
   const handleAddCustomReminder = async (payload: {
     category: DailyReminder['category'];
     text: string;
-    subtext: string;
+    subtext?: string;
   }) => {
     const created = await bloomRepository.createCustomReminder(payload);
     setReminders((prev) => [created, ...prev]);
     setActiveReminderIndex(0);
+  };
+
+  const handleUpdateReminder = async (
+    id: string,
+    payload: {
+      category: DailyReminder['category'];
+      text: string;
+      subtext?: string;
+    }
+  ) => {
+    const existing = reminders.find((r) => r.id === id);
+    if (!existing) return;
+    const updated = await bloomRepository.updateDailyReminder(existing, payload);
+    setReminders((prev) => prev.map((r) => (r.id === id ? updated : r)));
+  };
+
+  const handleDeleteReminder = async (id: string) => {
+    setReminders((prev) => prev.filter((r) => r.id !== id));
+    await bloomRepository.deleteDailyReminder(id);
   };
 
   const handleSaveFutureNote = async (
@@ -224,6 +243,15 @@ export function App() {
     const target = diaryEntries.find((item) => item.id === id);
     if (!target) return;
     const updated = await bloomRepository.updateDiaryEntry(target, payload);
+    setDiaryEntries((prev) =>
+      prev.map((item) => (item.id === id ? updated : item))
+    );
+  };
+
+  const handleTogglePinDiary = async (id: string) => {
+    const target = diaryEntries.find((item) => item.id === id);
+    if (!target) return;
+    const updated = await bloomRepository.togglePinDiaryEntry(target);
     setDiaryEntries((prev) =>
       prev.map((item) => (item.id === id ? updated : item))
     );
@@ -330,6 +358,8 @@ export function App() {
               activeReminderIndex={activeReminderIndex}
               onChangeReminderIndex={setActiveReminderIndex}
               onAddCustomReminder={handleAddCustomReminder}
+              onUpdateReminder={handleUpdateReminder}
+              onDeleteReminder={handleDeleteReminder}
               todayEntries={todayEntries}
               latestEntry={journalEntries[0]}
               futureNote={futureNote}
@@ -354,6 +384,7 @@ export function App() {
               entries={diaryEntries}
               onCreateDiary={handleCreateDiaryEntry}
               onUpdateDiary={handleUpdateDiaryEntry}
+              onTogglePinDiary={handleTogglePinDiary}
               onDeleteDiary={handleDeleteDiaryEntry}
             />
           )}
